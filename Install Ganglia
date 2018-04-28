@@ -1,0 +1,135 @@
+Berikut ini adalah ip dan hostname yang kami gunakan.
+
+Master : IP 192.168.0.112 
+Node 1 : IP 192.168.0.113 
+
+Konfigurasi Server
+
+Tambahkan hostname pada /etc/hosts kemudian save.
+
+Install Package Ganglia, Ganglia Web dan RRD tools.
+
+"yum install rrdtool rrdtool-devel ganglia-web ganglia-gmetad ganglia-gmond
+ganglia-gmond-python httpd apr-devel zlib-devel libconfuse-devel expat-devel pcre-devel"
+
+Edit data source pada file /etc/ganglia/gmetad.conf.
+
+=================================|
+data_source "Monitoring " master
+=================================|
+
+Selanjutnya edit berberapa options pada file /etc/ganglia/gmond.conf.
+
+=================================|
+cluster { 
+name = "Monitoring "
+owner = "unspecified"
+latlong = "unspecified"
+url = "unspecified"
+}
+
+host {
+location = "unspecified"
+}
+
+udp_send_channel {
+host = master
+port = 8649
+ttl = 1
+}
+
+udp_recv_channel {
+port = 8649
+}
+
+tcp_accept_channel {
+port = 8649
+}   
+=================================|
+
+agar ganglia web dapat di akses via remote kita perlu merubah sedikit konfigurasi 
+pada /etc/httpd/conf.d/ganglia.conf
+
+=================================|
+Reqiure  all granted
+=================================|
+
+
+Disable selinux dan firewalld.
+
+"systemctl stop firewalld"
+"systemctl disable firewalld"
+
+Edit selinux di /etc/sysconfig/selinux  
+
+=================================|
+SELINUX=disabled
+=================================|
+
+Restart service http dan ganglia.
+
+"systemctl restart httpd"
+"systemctl restart gmond"
+"systemctl restart gmetad"
+"systemctl enable httpd"
+"systemctl enable gmond"
+"systemctl enable gmetad"
+
+Konfigurasi Node 1
+
+Tambahkan hostname pada /etc/hosts kemudian save.
+
+Install ganglia daemon pada masing-masing node.
+
+"yum install ganglia-gmond"
+
+Setelah terinstall, edit berberapa file konfigurasi di /etc/ganglia/gmond.conf.
+
+=================================|
+cluster {
+name = "Monitoring"
+owner = "unspecified"
+latlong = "unspecified"
+url = "unspecified"
+}
+
+host {
+location = "unspecified"
+}
+
+udp_send_channel {
+host = master
+port = 8649
+ttl = 1
+}
+
+udp_recv_channel {
+
+}
+
+tcp_accept_channel {
+
+}
+=================================|
+
+Selanjutnya disable firewalld dan selinux
+
+"systemctl stop firewalld"
+"systemctl disable firewalld"
+
+Edit selinux di /etc/sysconfig/selinux  
+
+=================================|
+SELINUX=disabled
+=================================|
+
+restart service ganglia.
+
+"systemctl restart gmond"
+"systemctl enable gmond"
+
+coba akses ganglia web untuk memastikan konfigurasi ganglia sudah benar.
+
+Url : http://192.168.0.112/ganglia/
+
+
